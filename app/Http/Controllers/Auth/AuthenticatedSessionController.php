@@ -4,22 +4,30 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): Response
+    public function store(LoginRequest $request): JsonResponse
     {
         $request->authenticate();
 
-        $request->session()->regenerate();
+        //$request->session()->regenerate();
 
-        return response()->noContent();
+        $user = User::where('email', $request->email)->firstOrFail();
+
+        $random = Str::random(255);
+        $token = $user->createToken($random)->plainTextToken;
+
+        return response()->json(['access_token' => $token, 'token_type' => 'Bearer', 'message' => 'Login Successfully'], 200);
     }
 
     /**
