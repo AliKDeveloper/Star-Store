@@ -8,18 +8,9 @@
 </p>
 
 ## About Laravel
-<<<<<<< HEAD
-## Add Hozan1 Branch
-## Add Hozan2 Branch
-## Add Hozan3 Branch
-## Add Hozan4 Branch
-## Add Hozan5 Branch
-## Add Hozan6 Branch
-## Add Hozan7 Branch
-=======
->>>>>>> 4c80c44f223c5eb14a29ea0cbd01722906b95014
 
 ## Add Hozan & Ali Branches
+## Add Hozan2 & Ali2 Branches
 
 
 
