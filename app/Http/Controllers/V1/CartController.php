@@ -52,18 +52,10 @@ class CartController extends Controller
         }
     }
 
-    public function destroy(Request $request)
+    public function destroy(Product $product)
     {
-        $user = $request->user();
-        $product = Product::find($request->input('product_id'));
-
-        // Check if product ID is not null
-        if (!$product)
-        {
-            return response()->json([
-                'message' => 'Product ID is required',
-            ], 404);
-        }
+        $user = auth()->user();
+        $product = Product::find($product->id);
 
         $cartItem = $user->cartItems()->where('product_id', $product->id)->first();
 
