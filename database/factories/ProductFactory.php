@@ -26,7 +26,7 @@ class ProductFactory extends Factory
         $arr['sku'] = fake()->ean8();
         $arr['image'] = fake()->imageUrl();
         $arr['description'] = fake()->text();
-        $arr['quantity'] = fake()->numberBetween(1, 10);
+        $arr['stock'] = fake()->numberBetween(1, 10);
         $arr['price'] = fake()->numberBetween(1, 1000);
         $arr['is_available'] = fake()->boolean();
         $arr['is_featured'] = fake()->boolean();

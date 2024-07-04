@@ -24,8 +24,8 @@ return new class extends Migration
             $table->string('sku')->unique();
             $table->string('image')->nullable();
             $table->longText('description')->nullable();
-            $table->unsignedBigInteger('quantity');
-            $table->double('price');
+            $table->unsignedBigInteger('stock');
+            $table->unsignedBigInteger('price');
             $table->boolean('is_available')->default(true);
             $table->boolean('is_featured')->default(false);
             $table->date('published_at');
