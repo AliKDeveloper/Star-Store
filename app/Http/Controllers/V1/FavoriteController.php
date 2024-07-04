@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class FavoriteController extends Controller
@@ -45,26 +46,17 @@ class FavoriteController extends Controller
         ], 200);
     }
 
-    public function destroy(Request $request)
+    public function destroy(Product $product)
     {
-        $user = $request->user();
-        $product_id = $request->product_id;
+        $user = auth()->user();
 
-        // Check if product is not null
-        if (!$product_id)
-        {
-            return response()->json([
-                'message' => 'Product ID is required',
-            ], 404);
-        }
-
-        if (!$user->favorites()->where('product_id', $product_id)->exists())
+        if (!$user->favorites()->where('product_id', $product->id)->exists())
         {
             return response()->json([
                 'message' => 'Product does not exist in favorites',
             ], 404);
         }
-        $user->favorites()->detach($product_id);
+        $user->favorites()->detach($product->id);
 
         return response()->json([
             'message' => 'Product removed from favorites successfully',
@@ -75,6 +67,11 @@ class FavoriteController extends Controller
     {
         $user = $request->user();
         $user->favorites()->detach();
+
+        if ($user->favorites->isEmpty())
+        {
+            return response()->json(['message' => 'Favorite is empty']);
+        }
 
         return response()->json([
             'message' => 'All products removed from favorites successfully',

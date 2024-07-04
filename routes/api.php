@@ -21,32 +21,47 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('user-delete',[UserController::class, 'delete']);
 
     // Routes for Favorites
-    Route::get('favorites', [FavoriteController::class, 'index'])->name('favorites');
-    Route::post('favorite-add', [FavoriteController::class, 'store'])->name('favorite-add');
-    Route::delete('favorite-remove', [FavoriteController::class, 'destroy'])->name('favorite-remove');
-    Route::delete('favorites-remove-all', [FavoriteController::class, 'destroyAll'])->name('favorites-remove-all');
-    Route::post('favorite-toggle', [FavoriteController::class, 'toggleFavorite'])->name('favorite-toggle');
+    Route::group(['controller' => FavoriteController::class, 'prefix' => 'favorites'],function () {
+        //127.0.0.1:8000/api/v1/favorites   = favorites.index
+        Route::get('/',  'index')->name('favorites.index');
+        Route::post('/add',  'store')->name('favorites.store');
+        Route::delete('/remove/{product}', 'destroy')->name('favorites.destroy');
+        Route::delete('/remove/all',  'destroyAll')->name('favorites.destroyAll');
+        Route::post('/toggle', 'toggleFavorite')->name('favorites.toggle');
+    });
 
     // Routes for Carts
-    Route::get('carts', [CartController::class, 'index'])->name('carts');
-    Route::post('cart-add', [CartController::class, 'store'])->name('cart-add');
-    Route::post('cart-increase', [CartController::class, 'increaseQuantity'])->name('cart-increase');
-    Route::post('cart-decrease', [CartController::class, 'decreaseQuantity'])->name('cart-decrease');
-    Route::delete('cart-remove', [CartController::class, 'destroy'])->name('cart-remove');
-    Route::delete('carts-remove-all', [CartController::class, 'destroyAll'])->name('carts-remove-all');
+    Route::group(['controller' => CartController::class, 'prefix' => 'carts'],function () {
+        Route::get('/',  'index')->name('carts.index');
+        Route::post('/add',  'store')->name('carts.store');
+        Route::post('/increase','increaseQuantity')->name('carts.increase');
+        Route::post('/decrease','decreaseQuantity')->name('carts.decrease');
+        Route::delete('/remove/{product}', 'destroy')->name('carts.destroy');
+        Route::delete('/remove/all',  'destroyAll')->name('carts.destroyAll');
+    });
+
+    // Routes for Sliders
+    Route::group(['controller' => SliderController::class, 'prefix' => 'sliders'],function () {
+        Route::get('/','index')->name('sliders.index');
+    });
+
+    // Routes for Brands
+    Route::group(['controller' => BrandController::class, 'prefix' => 'brands'],function () {
+        Route::get('/','index')->name('brands.index');
+    });
+
+    // Routes for Categories
+    Route::group(['controller' => CategoryController::class, 'prefix' => 'categories'],function () {
+        Route::get('/','index')->name('categories.index');
+    });
+
+    // Routes for Products
+    Route::group(['controller' => ProductController::class, 'prefix' => 'products'],function () {
+        Route::get('/','index')->name('products.index');
+        Route::get('/{product}','show')->name('products.show');
+    });
+
 });
-//Routes for Slider
-Route::get('sliders',[SliderController::class, 'index'])->name('sliders');
-
-//Routes for Brands
-Route::get('brands',[BrandController::class, 'index'])->name('brands');
-
-//Routes for Categories
-Route::get('categories',[CategoryController::class, 'index'])->name('categories');
-
-//Routes for Products
-Route::get('products',[ProductController::class, 'index'])->name('products');
-Route::get('products/{product}',[ProductController::class, 'show'])->name('products.show');
 
 // Include all routes from auth.php
 require __DIR__.'/auth.php';
