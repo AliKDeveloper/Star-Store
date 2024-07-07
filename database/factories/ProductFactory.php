@@ -27,7 +27,7 @@ class ProductFactory extends Factory
         $arr['image'] = fake()->imageUrl();
         $arr['description'] = fake()->text();
         $arr['stock'] = fake()->numberBetween(1, 10);
-        $arr['price'] = fake()->numberBetween(1, 1000);
+        $arr['price'] = fake()->randomFloat(2, 1, 1000);
         $arr['is_available'] = fake()->boolean();
         $arr['is_featured'] = fake()->boolean();
         $arr['published_at'] = fake()->dateTime();
