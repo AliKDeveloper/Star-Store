@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->longText('description')->nullable();
             $table->unsignedBigInteger('stock');
-            $table->unsignedBigInteger('price');
+            $table->decimal('price', 10, 2);
             $table->boolean('is_available')->default(true);
             $table->boolean('is_featured')->default(false);
             $table->date('published_at');

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CartResource;
+use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -13,8 +15,14 @@ class CartController extends Controller
         $user = $request->user();
         $perPage = $request->input('per_page', 15);
         $cartItems = $user->cartItems()->paginate($perPage);
+        $cartResource = CartResource::collection($cartItems);
 
-        return response()->json($cartItems);
+        return ['data' => $cartResource,'details' => ['shipping_fee'=>'a','subtotal'=>'b','total'=>'c']];
+       // return CartResource::collection($cartItems)
+//            ->additional(['data' =>
+//                    ['details' => ['shipping_fee'=>'a','subtotal'=>'b','total'=>'c']
+//                    ]
+//                ]);
     }
 
     public function store(Request $request)
@@ -23,10 +31,17 @@ class CartController extends Controller
         $product = Product::find($request->input('product_id'));
 
         // Check if product ID is not null
-        if (!$product)
+        if (!$request->input('product_id'))
         {
             return response()->json([
                 'message' => 'Product ID is required',
+            ], 404);
+        }
+        // Check if product is existed in the database
+        if (!$product)
+        {
+            return response()->json([
+                'message' => 'Product ID is not exist in the database',
             ], 404);
         }
 
@@ -44,7 +59,12 @@ class CartController extends Controller
                 ], 400);
             }
 
-            $user->cartItems()->attach($product->id, ['quantity' => 1]);
+            // Add product to cart
+            $user->cartItems()->attach($product->id,
+                [
+                    'quantity' => 1,
+                    'total_price' => $product->price
+                ]);
             $product->decrement('stock', 1);
             $product->save();
 
@@ -129,6 +149,7 @@ class CartController extends Controller
         //Check Product Stock
         if ($product->stock >= 1) {
             $cartItem->pivot->increment('quantity', 1);
+            $cartItem->pivot->total_price = $cartItem->pivot->quantity * $product->price;
             $product->decrement('stock', 1);
 
             return response()->json([
@@ -177,6 +198,7 @@ class CartController extends Controller
         }
 
         $cartItem->pivot->decrement('quantity', 1);
+        $cartItem->pivot->total_price = $cartItem->pivot->quantity * $product->price;
         $product->increment('stock', 1);
 
         return response()->json([

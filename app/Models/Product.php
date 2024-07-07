@@ -29,13 +29,6 @@ class Product extends Model
         'published_at',
     ];
 
-    public function price(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => $value / 100,
-            set: fn($value) => $value * 100
-        );
-    }
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);
@@ -53,6 +46,11 @@ class Product extends Model
 
     public function userCarts(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_carts')->withPivot('quantity')->withTimestamps();
+        return $this->belongsToMany(User::class, CartItem::class)->withPivot(['quantity','total_price'])->withTimestamps();
     }
+
+    protected $casts = [
+        'price' => 'float',
+    ];
+
 }
