@@ -4,7 +4,6 @@ namespace App\Http\Controllers\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CartResource;
-use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -17,12 +16,26 @@ class CartController extends Controller
         $cartItems = $user->cartItems()->paginate($perPage);
         $cartResource = CartResource::collection($cartItems);
 
-        return ['data' => $cartResource,'details' => ['shipping_fee'=>'a','subtotal'=>'b','total'=>'c']];
-       // return CartResource::collection($cartItems)
-//            ->additional(['data' =>
-//                    ['details' => ['shipping_fee'=>'a','subtotal'=>'b','total'=>'c']
-//                    ]
-//                ]);
+        $subtotal = 0;
+        $shipping_fee = 0;
+        $grand_total = 0;
+        foreach ($cartItems as $item) {
+            $subtotal += $item->pivot->total_price;
+        }
+
+        $subtotal >= 50 ? $shipping_fee = 0 : $shipping_fee = 5;
+        $grand_total = $subtotal + $shipping_fee;
+
+        return response()->json([
+            'data' =>
+                [
+                    'cart_items' => $cartResource,
+                    'details' =>
+                        [
+                            'Sub Total' => $subtotal, 'Shipping Fee' => $shipping_fee, 'Grand Total' => $grand_total
+                        ]
+                ]
+        ], 200);
     }
 
     public function store(Request $request)
@@ -31,15 +44,13 @@ class CartController extends Controller
         $product = Product::find($request->input('product_id'));
 
         // Check if product ID is not null
-        if (!$request->input('product_id'))
-        {
+        if (!$request->input('product_id')) {
             return response()->json([
                 'message' => 'Product ID is required',
             ], 404);
         }
         // Check if product is existed in the database
-        if (!$product)
-        {
+        if (!$product) {
             return response()->json([
                 'message' => 'Product ID is not exist in the database',
             ], 404);
@@ -50,8 +61,7 @@ class CartController extends Controller
             return response()->json([
                 'message' => 'Product already exists in cart',
             ], 409);
-        }
-        else{
+        } else {
             //Check Product Stock
             if ($product->stock < 1) {
                 return response()->json([
@@ -79,21 +89,16 @@ class CartController extends Controller
 
         $cartItem = $user->cartItems()->where('product_id', $product->id)->first();
 
-        if ($cartItem?->exists())
-        {
+        if ($cartItem?->exists()) {
             $product->increment('stock', $cartItem->pivot->quantity);
             $product->save();
 
             $user->cartItems()->detach($product->id);
 
             return response()->json(['message' => 'Product removed from cart']);
-        }
-        else
-        {
+        } else {
             return response()->json(['message' => 'Product not exists in cart'], 404);
         }
-
-
     }
 
     public function destroyAll(Request $request)
@@ -103,8 +108,7 @@ class CartController extends Controller
         // Retrieve all cart items for the user
         $cartItems = $user->cartItems;
 
-        if ($cartItems->isEmpty())
-        {
+        if ($cartItems->isEmpty()) {
             return response()->json(['message' => 'Cart is empty']);
         }
 
@@ -130,8 +134,7 @@ class CartController extends Controller
         $product = Product::find($request->input('product_id'));
 
         // Check if product ID is not null
-        if (!$product)
-        {
+        if (!$product) {
             return response()->json([
                 'message' => 'Product ID is required',
             ], 404);
@@ -139,8 +142,7 @@ class CartController extends Controller
 
         $cartItem = $user->cartItems()->where('product_id', $product->id)->first();
 
-        if (!$cartItem)
-        {
+        if (!$cartItem) {
             return response()->json([
                 'message' => 'Product not exists in cart',
             ], 404);
@@ -150,14 +152,13 @@ class CartController extends Controller
         if ($product->stock >= 1) {
             $cartItem->pivot->increment('quantity', 1);
             $cartItem->pivot->total_price = $cartItem->pivot->quantity * $product->price;
+            $cartItem->pivot->save();
             $product->decrement('stock', 1);
 
             return response()->json([
                 'message' => 'Quantity increased successfully',
             ], 200);
-        }
-        else
-        {
+        } else {
             return response()->json([
                 'message' => 'The product is out of stock',
             ], 400);
@@ -170,8 +171,7 @@ class CartController extends Controller
         $product = Product::find($request->input('product_id'));
 
         // Check if product ID is not null
-        if (!$product)
-        {
+        if (!$product) {
             return response()->json([
                 'message' => 'Product ID is required',
             ], 404);
@@ -179,15 +179,13 @@ class CartController extends Controller
 
         $cartItem = $user->cartItems()->where('product_id', $product->id)->first();
 
-        if (!$cartItem)
-        {
+        if (!$cartItem) {
             return response()->json([
                 'message' => 'Product not exists in cart',
             ], 404);
         }
 
-        if ($cartItem->pivot->quantity == 1)
-        {
+        if ($cartItem->pivot->quantity == 1) {
             $user->cartItems()->detach($product->id);
 
             $product->increment('stock', 1);
@@ -199,6 +197,8 @@ class CartController extends Controller
 
         $cartItem->pivot->decrement('quantity', 1);
         $cartItem->pivot->total_price = $cartItem->pivot->quantity * $product->price;
+        $cartItem->pivot->save();
+
         $product->increment('stock', 1);
 
         return response()->json([

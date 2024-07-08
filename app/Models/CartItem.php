@@ -21,7 +21,6 @@ class CartItem extends Pivot
     ];
 
     protected $casts = [
-        'quantity' => 'integer',
         'total_price' => 'float',
     ];
 
